@@ -1,0 +1,32 @@
+# Add  here common redis settings
+:feed: &FEED
+  :id:
+    :channel: stream.id
+    :format: Z16Z16dddd
+    :format_method: unpack
+  :tr:
+    :channel: stream.tr
+    :format: ','
+    :format_method: split
+  :int:
+    :channel: preprocessor
+    :format: ','
+    :format_method: split
+
+test:
+  <<: *FEED
+
+cucumber:
+  <<: *FEED
+
+development:
+  <<: *FEED
+
+experimental:
+  <<: *FEED
+
+staging:
+  <<: *FEED
+
+production:
+  <<: *FEED

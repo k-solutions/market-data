@@ -1,0 +1,72 @@
+# Add  here channels settings in diff levels
+:publisher: &PUBLISHER
+  :publisher:
+    -
+      :id:    stream.id
+      :type:  :redis
+      :format: Z16Z16dddd
+      :format_method: :pack
+    -
+      :id:    stream.tr
+      :type:  :redis
+      :format: ','
+      :format_method: :join
+
+  :subscriber:
+    -
+      :id:    zmq:internal
+      :type:  :zmq
+      :role:  :psubscribe
+      
+:preprocessor: &PREPROCESSOR
+  :subscriber:
+    -
+      :id:    stream.id
+      :type:  :redis
+      :role:  :psubscribe
+      :format: Z16Z16dddd
+      :format_method: :unpack
+    -
+      :id:    stream.tr
+      :type:  :redis
+      :role:  :psubscribe
+      :format: ','
+      :format_method: :split
+
+  :publisher:
+    -
+      :id:    preprocessor
+      :type:  :redis
+      :format: ','
+      :format_method: :join
+    -
+      :id:    int:preprocessor
+      :type:  :zmq
+      :format: ','
+      :format_method: :join
+      
+:subscriber: &SUBSCRIBER
+  :subscriber:
+    -
+      :id:    preprocessor
+      :type:  :redis
+      :format: ','
+      :format_method: :split
+ 
+test:
+  <<: *PREPROCESSOR
+
+cucumber:
+  <<: *PREPROCESSOR
+
+development:
+  <<: *PREPROCESSOR
+
+experimental:
+  <<: *PREPROCESSOR
+
+staging:
+  <<: *PREPROCESSOR
+
+production:
+  <<: *PREPROCESSOR

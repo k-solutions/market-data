@@ -1,0 +1,34 @@
+#   dir_mode: script
+#   dir: ../../log
+#   multiple: false
+#   backtrace: true
+#   monitor: true
+options: &OPTIONS
+  :dir_mode:    :normal
+  :dir:         tmp/pids
+  :multiple:    false
+  :backtrace:   true
+  :monitor:     false
+  :log_output:  true
+
+development:
+  <<: *OPTIONS
+
+staging:
+  <<: *OPTIONS
+  :monitor:     true
+
+experimental:
+  <<: *OPTIONS
+
+test:
+  <<: *OPTIONS
+  :multiple:    true
+  :mode:        :load
+  :monitor:     false
+
+production:
+  <<: *OPTIONS
+  :backtrace:   false
+  :monitor:     true
+  :log_output:  false

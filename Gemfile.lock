@@ -1,0 +1,57 @@
+GIT
+  remote: git://github.com/celluloid/celluloid.git
+  revision: b6194e405accfb0224247cb76362bf5e957eb399
+  specs:
+    celluloid (0.15.0.pre)
+      timers (>= 1.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    celluloid-io (0.14.1)
+      celluloid (>= 0.14.1)
+      nio4r (>= 0.4.5)
+    celluloid-redis (0.0.2)
+      celluloid-io (>= 0.13.0.pre)
+      redis
+    coderay (1.0.9)
+    columnize (0.3.6)
+    daemons (1.1.9)
+    debugger (1.6.1)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.2.3)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.2.3)
+    diff-lcs (1.2.4)
+    hiredis (0.4.5)
+    method_source (0.8.2)
+    nio4r (0.4.6)
+    pry (0.9.12.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    redis (2.2.2)
+    rspec (2.14.1)
+      rspec-core (~> 2.14.0)
+      rspec-expectations (~> 2.14.0)
+      rspec-mocks (~> 2.14.0)
+    rspec-core (2.14.4)
+    rspec-expectations (2.14.0)
+      diff-lcs (>= 1.1.3, < 2.0)
+    rspec-mocks (2.14.1)
+    slop (3.4.6)
+    timers (1.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  celluloid!
+  celluloid-redis
+  daemons
+  debugger
+  hiredis
+  pry
+  redis (< 3.0)
+  rspec

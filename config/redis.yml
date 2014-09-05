@@ -1,0 +1,46 @@
+# Add  here common redis settings
+:redis: &REDIS
+  :redisrb: &REDISRB
+    :host: '127.0.0.1'
+    :port: 6379
+
+  :hiredis: &HIREDIS
+    :host: '127.0.0.1'
+    :port: 6379
+
+  :celluloid: &CELLULOID
+    <<: *REDISRB
+
+  :cache: &CACHE
+    :url: redis://localhost:6379/0
+
+  :resque: &RESQUE
+    :url: redis://localhost:6379/0
+
+
+  :pubsub: &PUBSUB # We could have more redis instances
+    :url: redis://127.0.0.1:6379/0
+
+  :broadcast:
+    :url: redis://127.0.0.1:6379/0
+
+test:
+  <<: *REDIS
+
+cucumber:
+  <<: *REDIS
+
+development:
+  <<: *REDIS
+
+experimental:
+  <<: *REDIS
+
+staging:
+  <<: *REDIS
+
+production:
+  <<: *REDIS
+  # TODO: set to broadcast server redis
+  :broadcast:
+    :url: redis://172.17.10.13:6379/0

@@ -1,0 +1,742 @@
+# Configuration for IDC workers
+# Uses overridden defaults, but the merge is *not* recursive so child defaults must be used as well
+# See http://atechie.net/2009/07/merging-hashes-in-yaml-conf-files/ for help
+
+
+market_code: INTERACTIVEDATA
+#host: trialdata.interactivedata-rts.com
+host: localhost
+username: pfcanned
+password: mahogany
+
+#dump_file: /tmp/dump.txt
+#count_file: /tmp/count.txt
+count_intervals: [1, 10, 60, 300]
+heartbeat: 30
+realtime_logging:
+  channel: "logging"
+csp: false
+redis: "redis://127.0.0.1:6379/0"
+#anomaly_log: /tmp/anomalies.txt
+
+# NOTE: this provides the mapping between our market code and IDC market code, NOTHING MORE
+#   because of deep-merge, the default list should not be a superset of the env-specific lists
+#   subscriptions must currently be co-managed with the relay_id configuration files
+#       lib/daemons/relay_id/relay_id.cfg
+#       config/relay_id/relay_id_(environment).cfg
+# TODO: DRY this, see issue# 1516
+subscriptions: &DEFAULT_SUBSCRIPTIONS
+    DJIA: [4001, 343, 'I:DJI']
+    FTSE: [4008, 745, 'I:UKX']
+    CAC: [4007, 980, 'I:PX1']
+    DAX: [4008, 976, 'I:DAX']
+    #SSE: [4001, 523, 'I:000031']
+    #SP500: [4001, 653, 'I:SPX']
+    #NSDQ: [4001, 345, 'I:NDX']
+    IBEX: [4007, 658, 'I:IB'] # spreadsheet says 4008 so it may be that
+    #TA25: [4001, 266, ??]
+    #NI225: [4001, 354, 'I:NI225']
+    #TOPIX: [4001, 784, 'I:CORE30']
+    #DUBAI: [4001, 1079, 'I:DFMGI']
+    #TASI: [4001, 1045, 'I:TASI']
+    #HSI: [4001, 275, 'I:HSI']
+    #Straights Times Singapore Index..
+    #FSP500: [4001, 685, 'F1:SP\H12']
+    #FCAC: [4001, 611/612, 'F:FCE\*'] (depends which future)
+    #FDAX: [4001, 748, 'FDAXZ1']
+
+    GOLD: [4012, 691, 'C:PXAUUSDOZ\SP']
+    SILVER: [4012, 691, 'C:PXAGUSDOZ\SP']
+    OIL: [4012, 970, 'C:PBROUSDBR\SP']
+
+    #AAPL: [4001, 547, 'AAPL']
+    #DIS: [4001, 13, 'DIS']
+    #GOOG: [4001, 547, 'GOOG']
+    #INTC: [4001, 547, 'INTC']
+    #MSFT: [4001, 547, 'MSFT']
+    #BARC: [4001, 627, 'E:BARC']
+    #DBK: [4008, 762, 'DBK']
+    #BP: [4001, 627, 'E:BP.']
+    #OGZPY: [4001, 775, 'E:GAZP.EQNE']
+    #VOD: [4001, 627, 'E:VOD']
+    #TKC: [4001, 932, 'ETCELL']
+    #DAI: [4008, 762, 'DAI']
+    #MITSU: [4001, 373, 'E:7211']
+    #TATA: [4001, 911, 'E:TATAMOTORS']
+    #BHP: [4001, 728, 'E:BHP']
+
+    AUDJPY: [8100, 687, 'X:SAUDJPY']
+    AUDNZD: [8100, 687, 'X:SAUDNZD']
+    AUDUSD: [4012, 687, 'X:SAUDUSD']
+    EURGBP: [4012, 687, 'X:SEURGBP']
+    EURUSD: [4012, 687, 'X:SEURUSD']
+    GBPUSD: [4012, 687, 'X:SGBPUSD']
+    USDJPY: [4012, 687, 'X:SUSDJPY']
+    USDCAD: [4012, 687, 'X:SUSDCAD']
+
+
+# used by all assets
+asset_configuration:
+    default: &DEFAULT_CONFIG
+        max_ticks_per_second: 60  # used by all markets
+        value_avg_time_range: 240 # 4 mins
+        liquidity_threshold: 0.1  # updates/s (0.1=6/min)
+        liquidity_adjustment: 0.05
+        payout_classifier:
+            stickiness: 1.1
+            category_choice: greatest
+            bucket:
+                depth: 3
+                depth_weights:
+                    - 0.4
+                    - 0.7
+                    - 1
+            categories:
+                default:
+                    slope: 0.5
+                generator:
+                    preferred_weight: 1.5
+                    # these defaults only used by markets for testing on staging
+                    input_range: 1000
+                    output_range: 35
+                    preferred_category: 14
+                    ranges:
+                        -   percent: 0.1
+                            max_value: 5
+                        -   percent: 0.5
+                            max_value: 15
+                        -   percent: 1.0
+                            max_value: 35
+                generated_category_0:
+                    slope: 0.25
+                    weight: 1.25
+    # commodities ############################
+    OIL:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 249
+                    output_range: 23
+                    preferred_category: 2
+                    ranges:
+                        -   percent: 0.0080
+                            max_value: 2
+                        -   percent: 0.0281
+                            max_value: 3
+                        -   percent: 0.0803
+                            max_value: 4
+                        -   percent: 0.1084
+                            max_value: 5
+                        -   percent: 0.1325
+                            max_value: 6
+                        -   percent: 0.3373
+                            max_value: 12
+                        -   percent: 0.4056
+                            max_value: 13
+                        -   percent: 0.498
+                            max_value: 14
+                        -   percent: 0.6305
+                            max_value: 17
+                        -   percent: 0.996
+                            max_value: 22
+                        -   percent: 1.0
+                            max_value: 23
+    SILVER:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 124
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0322
+                            max_value: 4
+                        -   percent: 0.0806
+                            max_value: 5
+                        -   percent: 0.1855
+                            max_value: 6
+                        -   percent: 0.2016
+                            max_value: 7
+                        -   percent: 0.2177
+                            max_value: 8
+                        -   percent: 0.4677
+                            max_value: 14
+                        -   percent: 0.5081
+                            max_value: 15
+                        -   percent: 0.5726
+                            max_value: 16
+                        -   percent: 0.6613
+                            max_value: 19
+                        -   percent: 0.9919
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    GOLD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 286
+                    output_range: 28
+                    preferred_category: 7
+                    ranges:
+                        -   percent: 0.0245
+                            max_value: 7
+                        -   percent: 0.0629
+                            max_value: 8
+                        -   percent: 0.1468
+                            max_value: 9
+                        -   percent: 0.1573
+                            max_value: 10
+                        -   percent: 0.1748
+                            max_value: 11
+                        -   percent: 0.3881
+                            max_value: 17
+                        -   percent: 0.4336
+                            max_value: 18
+                        -   percent: 0.5
+                            max_value: 19
+                        -   percent: 0.5454
+                            max_value: 22
+                        -   percent: 0.9965
+                            max_value: 27
+                        -   percent: 1.0
+                            max_value: 28
+
+    # indices ##################################
+    DJIA:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 2908
+                    output_range: 35
+                    preferred_category: 14
+                    ranges:
+                        -   percent: 0.0124
+                            max_value: 14
+                        -   percent: 0.0371
+                            max_value: 15
+                        -   percent: 0.0922
+                            max_value: 16
+                        -   percent: 0.1104
+                            max_value: 17
+                        -   percent: 0.1310
+                            max_value: 18
+                        -   percent: 0.3036
+                            max_value: 24
+                        -   percent: 0.3569
+                            max_value: 25
+                        -   percent: 0.4288
+                            max_value: 26
+                        -   percent: 0.5406
+                            max_value: 29
+                        -   percent: 0.9996
+                            max_value: 34
+                        -   percent: 1.0
+                            max_value: 35
+    IBEX:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 1949
+                    output_range: 35
+                    preferred_category: 14
+                    ranges:
+                        -   percent: 0.0185
+                            max_value: 14
+                        -   percent: 0.0508
+                            max_value: 15
+                        -   percent: 0.1216
+                            max_value: 16
+                        -   percent: 0.1406
+                            max_value: 17
+                        -   percent: 0.1611
+                            max_value: 18
+                        -   percent: 0.3699
+                            max_value: 24
+                        -   percent: 0.4279
+                            max_value: 25
+                        -   percent: 0.5074
+                            max_value: 26
+                        -   percent: 0.6336
+                            max_value: 29
+                        -   percent: 0.9995
+                            max_value: 34
+                        -   percent: 1.0
+                            max_value: 35
+    DAX:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 1389
+                    output_range: 35
+                    preferred_category: 14
+                    ranges:
+                        -   percent: 0.0159
+                            max_value: 14
+                        -   percent: 0.0475
+                            max_value: 15
+                        -   percent: 0.1174
+                            max_value: 16
+                        -   percent: 0.1397
+                            max_value: 17
+                        -   percent: 0.1605
+                            max_value: 18
+                        -   percent: 0.3722
+                            max_value: 24
+                        -   percent: 0.4284
+                            max_value: 25
+                        -   percent: 0.5097
+                            max_value: 26
+                        -   percent: 0.6371
+                            max_value: 29
+                        -   percent: 0.9993
+                            max_value: 34
+                        -   percent: 1.0
+                            max_value: 35
+    FTSE:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 896
+                    output_range: 30
+                    preferred_category: 9
+                    ranges:
+                        -   percent: 0.0145
+                            max_value: 9
+                        -   percent: 0.0413
+                            max_value: 10
+                        -   percent: 0.1004
+                            max_value: 11
+                        -   percent: 0.1194
+                            max_value: 12
+                        -   percent: 0.1384
+                            max_value: 13
+                        -   percent: 0.3181
+                            max_value: 19
+                        -   percent: 0.3694
+                            max_value: 20
+                        -   percent: 0.4442
+                            max_value: 21
+                        -   percent: 0.5625
+                            max_value: 24
+                        -   percent: 0.9989
+                            max_value: 29
+                        -   percent: 1.0
+                            max_value: 30
+    CAC:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 621
+                    output_range: 30
+                    preferred_category: 9
+                    ranges:
+                        -   percent: 0.0145
+                            max_value: 9
+                        -   percent: 0.0467
+                            max_value: 10
+                        -   percent: 0.1159
+                            max_value: 11
+                        -   percent: 0.1385
+                            max_value: 12
+                        -   percent: 0.1610
+                            max_value: 13
+                        -   percent: 0.3784
+                            max_value: 19
+                        -   percent: 0.4460
+                            max_value: 20
+                        -   percent: 0.5330
+                            max_value: 21
+                        -   percent: 0.6618
+                            max_value: 24
+                        -   percent: 0.9984
+                            max_value: 29
+                        -   percent: 1.0
+                            max_value: 30
+    # forex ####################################
+    AUDUSD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 136
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0441
+                            max_value: 4
+                        -   percent: 0.1176
+                            max_value: 5
+                        -   percent: 0.2574
+                            max_value: 6
+                        -   percent: 0.272
+                            max_value: 7
+                        -   percent: 0.3015
+                            max_value: 8
+                        -   percent: 0.6618
+                            max_value: 14
+                        -   percent: 0.7206
+                            max_value: 15
+                        -   percent: 0.75
+                            max_value: 16
+                        -   percent: 0.8235
+                            max_value: 19
+                        -   percent: 0.9926
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    AUDNZD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 186
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0376
+                            max_value: 4
+                        -   percent: 0.0914
+                            max_value: 5
+                        -   percent: 0.1989
+                            max_value: 6
+                        -   percent: 0.215
+                            max_value: 7
+                        -   percent: 0.2312
+                            max_value: 8
+                        -   percent: 0.4892
+                            max_value: 14
+                        -   percent: 0.5322
+                            max_value: 15
+                        -   percent: 0.586
+                            max_value: 16
+                        -   percent: 0.6667
+                            max_value: 19
+                        -   percent: 0.9946
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    AUDJPY:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 1507
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0458
+                            max_value: 4
+                        -   percent: 0.1108
+                            max_value: 5
+                        -   percent: 0.2336
+                            max_value: 6
+                        -   percent: 0.2515
+                            max_value: 7
+                        -   percent: 0.2654
+                            max_value: 8
+                        -   percent: 0.5607
+                            max_value: 14
+                        -   percent: 0.5992
+                            max_value: 15
+                        -   percent: 0.6496
+                            max_value: 16
+                        -   percent: 0.7312
+                            max_value: 19
+                        -   percent: 0.9993
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    GBPUSD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 146
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0274
+                            max_value: 4
+                        -   percent: 0.0822
+                            max_value: 5
+                        -   percent: 0.1781
+                            max_value: 6
+                        -   percent: 0.1989
+                            max_value: 7
+                        -   percent: 0.2260
+                            max_value: 8
+                        -   percent: 0.5
+                            max_value: 14
+                        -   percent: 0.5616
+                            max_value: 15
+                        -   percent: 0.6301
+                            max_value: 16
+                        -   percent: 0.7329
+                            max_value: 19
+                        -   percent: 0.9932
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    USDCAD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 110
+                    output_range: 23
+                    preferred_category: 2
+                    ranges:
+                        -   percent: 0.0346
+                            max_value: 2
+                        -   percent: 0.1182
+                            max_value: 3
+                        -   percent: 0.2636
+                            max_value: 4
+                        -   percent: 0.2727
+                            max_value: 5
+                        -   percent: 0.2909
+                            max_value: 6
+                        -   percent: 0.6273
+                            max_value: 12
+                        -   percent: 0.6636
+                            max_value: 13
+                        -   percent: 0.7182
+                            max_value: 14
+                        -   percent: 0.7818
+                            max_value: 17
+                        -   percent: 0.9909
+                            max_value: 22
+                        -   percent: 1.0
+                            max_value: 23
+    USDJPY:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 125
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.048
+                            max_value: 4
+                        -   percent: 0.104
+                            max_value: 5
+                        -   percent: 0.232
+                            max_value: 6
+                        -   percent: 0.248
+                            max_value: 7
+                        -   percent: 0.264
+                            max_value: 8
+                        -   percent: 0.568
+                            max_value: 14
+                        -   percent: 0.6
+                            max_value: 15
+                        -   percent: 0.656
+                            max_value: 16
+                        -   percent: 0.736
+                            max_value: 19
+                        -   percent: 0.992
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    EURUSD:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 148
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0338
+                            max_value: 4
+                        -   percent: 0.0878
+                            max_value: 5
+                        -   percent: 0.1959
+                            max_value: 6
+                        -   percent: 0.2162
+                            max_value: 7
+                        -   percent: 0.2365
+                            max_value: 8
+                        -   percent: 0.5135
+                            max_value: 14
+                        -   percent: 0.5608
+                            max_value: 15
+                        -   percent: 0.6216
+                            max_value: 16
+                        -   percent: 0.7094
+                            max_value: 19
+                        -   percent: 0.9932
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+    EURGBP:
+        payout_classifier:
+            categories:
+                generator:
+                    input_range: 96
+                    output_range: 25
+                    preferred_category: 4
+                    ranges:
+                        -   percent: 0.0417
+                            max_value: 4
+                        -   percent: 0.1042
+                            max_value: 5
+                        -   percent: 0.2396
+                            max_value: 6
+                        -   percent: 0.2604
+                            max_value: 7
+                        -   percent: 0.2708
+                            max_value: 8
+                        -   percent: 0.5833
+                            max_value: 14
+                        -   percent: 0.625
+                            max_value: 15
+                        -   percent: 0.6875
+                            max_value: 16
+                        -   percent: 0.7708
+                            max_value: 19
+                        -   percent: 0.9896
+                            max_value: 24
+                        -   percent: 1.0
+                            max_value: 25
+
+
+# used for assets that have multiple contributors where not every tick is valid
+# and thus needs to be filtered
+filter_configuration:
+    default: &DEFAULT_FILTERS
+        non_anomalous_threshold_pips: 30
+        similar_threshold_pips: 0  # off
+        similar_threshold_sec: 1
+        # intraday
+        window_min_size: 5
+        window_prefer_size: 7
+        window_max_size: 11
+        timeout: 1
+        lookback_timeout: 10
+        tick_max_age: 10
+        collapse: true
+        smoothing_max_size: false # disabled
+        smoothing_max_age: false
+        smoothing_threshold_pips: 10
+        compression_ticks: 5
+        compression_max_age: 30
+        compression_age_multiplier: false
+        compression_follow_leader: true
+        blacklist:
+            - CCIB
+    slow: &SLOW_ASSET_FILTERS
+        window_min_size: 5
+        window_prefer_size: 7
+        window_max_size: 9
+        compression_max_age: 60
+    fast: &FAST_ASSET_FILTERS
+        window_min_size: 7
+        window_prefer_size: 9
+        window_max_size: 15
+    OIL:
+        # similar if within 30 cents (we have precision 3)
+        similar_threshold_pips: 300
+        window_min_size: 3
+        window_prefer_size: 3
+        tick_max_age: 300
+        collapse: false
+        smoothing_max_size: false
+        smoothing_max_age: false
+        compression_max_age: 60
+    SILVER:
+        <<: *SLOW_ASSET_FILTERS
+    GOLD:
+        <<: *SLOW_ASSET_FILTERS
+        smoothing_threshold_pips: 30 # note: disabled
+        compression_ticks: 7
+        compression_max_age: 30
+        blacklist: false
+    AUDNZD:
+        <<: *SLOW_ASSET_FILTERS
+    AUDJPY:
+        compression_ticks: 7
+    EURCHF:
+        <<: *SLOW_ASSET_FILTERS
+    EURJPY:
+        compression_ticks: 7
+    EURTRY:
+        <<: *SLOW_ASSET_FILTERS
+    USDCAD:
+        compression_max_age: 50
+    GBPUSD:
+        compression_max_age: 45
+    AUDUSD:
+        compression_ticks: 7
+    CADJPY:
+        compression_ticks: 7
+    USDSGD:
+        <<: *SLOW_ASSET_FILTERS
+    EURAUD:
+        compression_ticks: 7
+    EURZAR:
+        <<: *SLOW_ASSET_FILTERS
+    GBPAUD:
+        compression_max_age: 45
+    USDZAR:
+        compression_max_age: 40
+    GBPJPY:
+        compression_ticks: 7
+    EURGBP:
+        compression_max_age: 45
+    EURUSD:
+        compression_max_age: 40
+    NZDUSD:
+        <<: *SLOW_ASSET_FILTERS
+    USDCHF:
+        compression_max_age: 40
+    USDJPY:
+        compression_ticks: 7
+    ZARJPY:
+        <<: *SLOW_ASSET_FILTERS
+
+
+development:
+    # FOR EXAMPLE ONLY:
+    # filter_configuration:
+    #     default:
+    #         expiry_timeout: example
+    #     OIL:
+    #         expiry_timeout: example
+    filter_configuration:
+        default:
+            blacklist:
+                - BLCK
+staging:
+    host: 192.168.30.25
+    username: market1
+    password: market1
+    subscriptions:
+        AUDJPY: [8100, 687, 'X:SAUDJPY']
+        AUDNZD: [8100, 687, 'X:SAUDNZD']
+        AUDUSD: [8100, 687, 'X:SAUDUSD']
+        CADJPY: [8100, 687, 'X:SCADJPY']
+        EURAUD: [8100, 687, 'X:SEURAUD']
+        EURCHF: [8100, 687, 'X:SEURCHF']
+        EURGBP: [8100, 687, 'X:SEURGBP']
+        EURJPY: [8100, 687, 'X:SEURJPY']
+        EURTRY: [8100, 687, 'X:SEURTRY']
+        EURUSD: [8100, 687, 'X:SEURUSD']
+        EURZAR: [8100, 687, 'X:SEURZAR']
+        GBPAUD: [8100, 687, 'X:SGBPAUD']
+        GBPEUR: [8100, 687, 'X:SGBPEUR']
+        GBPJPY: [8100, 687, 'X:SGBPJPY']
+        GBPUSD: [8100, 687, 'X:SGBPUSD']
+        NZDUSD: [8100, 687, 'X:SNZDUSD']
+        USDCAD: [8100, 687, 'X:SUSDCAD']
+        USDCHF: [8100, 687, 'X:SUSDCHF']
+        USDJPY: [8100, 687, 'X:SUSDJPY']
+        USDSGD: [8100, 687, 'X:SUSDSGD']
+        USDTRY: [8100, 687, 'X:SUSDTRY']
+        USDZAR: [8100, 687, 'X:SUSDZAR']
+        ZARJPY: [8100, 687, 'X:SZARJPY']
+
+experimental:
+    host: 192.168.30.25
+    username: market2
+    password: market2
+
+production:
+    host: 192.168.30.25
+    username: mtw_vpn
+    password: mtw_vpn

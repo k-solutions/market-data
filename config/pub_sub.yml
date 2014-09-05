@@ -1,0 +1,34 @@
+# Add  here common redis settings
+:pubsub: &PUBSUB # We could have more redis instances
+  :url: redis://127.0.0.1:6379/0
+  :feed:
+    :id:
+      :channel: stream.id
+      :format: Z16Z16dddd
+      :format_method: unpack
+    :tr:
+      :channel: stream.tr
+      :format: ','
+      :format_method: split
+    :int:
+      :channel: preprocessor
+      :format: ','
+      :format_method: split
+
+test:
+  <<: *REDIS
+
+cucumber:
+  <<: *REDIS
+
+development:
+  <<: *REDIS
+
+experimental:
+  <<: *REDIS
+
+staging:
+  <<: *REDIS
+
+production:
+  <<: *REDIS
